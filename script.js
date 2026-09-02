@@ -1,314 +1,321 @@
-const deleteAllBtn = document.querySelector('.deleteAll');
-const filmForm = document.getElementById('film-form');
-const submitBtn = document.querySelector('#submit-btn');
-const cancelEditBtn = document.getElementById('cancel-edit-btn');
-const titleInput = document.querySelector('#title');
-const genreInput = document.querySelector('#genre');
-const yearInput = document.querySelector('#releaseYear');
-const watchedInput = document.querySelector('#isWatched');
-const filTitle = document.getElementById('filTitle');
-const filGenre = document.getElementById('filGenre');
-const filYear = document.getElementById('filYear');
-const filWatched = document.getElementById('filWatched');
+const deleteAllButton = document.querySelector('.delete-all-button');
+const filmFormElement = document.getElementById('film-form');
+const submitButton = document.querySelector('#submit-btn');
+const cancelEditButton = document.getElementById('cancel-edit-btn');
+const titleInput = document.querySelector('#film-title');
+const genreInput = document.querySelector('#film-genre');
+const yearInput = document.querySelector('#film-year');
+const watchedCheckbox = document.querySelector('#film-watched');
+const filterTitleInput = document.getElementById('filter-title');
+const filterGenreInput = document.getElementById('filter-genre');
+const filterYearInput = document.getElementById('filter-year');
+const filterWatchedSelect = document.getElementById('filter-watched');
 
 const userEmail = 'defaultuser@mail.ru';
-
-let filmsList = [];
+let films = [];
 let editingFilmId = null;
 
-// Валидация и работа с формой
-function validateForm() {
-  let isValid = true;
+// Валидация формы
 
-  const titleError = document.querySelector('#title-error');
-  if (!titleInput.value.trim()) {
-    titleError.textContent = 'Пожалуйста, введите название фильма';
-    titleInput.classList.add('error');
-    isValid = false;
-  } else {
-    titleError.textContent = '';
-    titleInput.classList.remove('error');
-  }
+function validateFilmForm() {
+    let isValid = true;
 
-  const genreError = document.querySelector('#genre-error');
-  if (!genreInput.value.trim()) {
-    genreError.textContent = 'Пожалуйста, введите жанр фильма';
-    genreInput.classList.add('error');
-    isValid = false;
-  } else {
-    genreError.textContent = '';
-    genreInput.classList.remove('error');
-  }
+    const titleError = document.querySelector('#title-error');
+    if (!titleInput.value.trim()) {
+        titleError.textContent = 'Пожалуйста, введите название фильма';
+        titleInput.classList.add('error');
+        isValid = false;
+    } else {
+        titleError.textContent = '';
+        titleInput.classList.remove('error');
+    }
 
-  const yearError = document.querySelector('#releaseYear-error');
-  const yearValue = yearInput.value.trim();
+    const genreError = document.querySelector('#genre-error');
+    if (!genreInput.value.trim()) {
+        genreError.textContent = 'Пожалуйста, введите жанр фильма';
+        genreInput.classList.add('error');
+        isValid = false;
+    } else {
+        genreError.textContent = '';
+        genreInput.classList.remove('error');
+    }
 
-  if (!yearValue) {
-    yearError.textContent = 'Пожалуйста, введите год выпуска';
-    yearInput.classList.add('error');
-    isValid = false;
-  } else if (!/^\d{4}$/.test(yearValue)) {
-    yearError.textContent = 'Год должен состоять из 4 цифр';
-    yearInput.classList.add('error');
-    isValid = false;
-  } else {
-    yearError.textContent = '';
-    yearInput.classList.remove('error');
-  }
-  return isValid;
+    const yearError = document.querySelector('#year-error');
+    const yearValue = yearInput.value.trim();
+
+    if (!yearValue) {
+        yearError.textContent = 'Пожалуйста, введите год выпуска';
+        yearInput.classList.add('error');
+        isValid = false;
+    } else if (!/^\d{4}$/.test(yearValue)) {
+        yearError.textContent = 'Год должен состоять из 4 цифр';
+        yearInput.classList.add('error');
+        isValid = false;
+    } else {
+        yearError.textContent = '';
+        yearInput.classList.remove('error');
+    }
+
+    return isValid;
 }
 
-function clearErrors() {
-  document.querySelectorAll('.error-message').forEach(error => error.textContent = '');
-  document.querySelectorAll('.error').forEach(input => input.classList.remove('error'));
+function clearFormErrors() {
+    document.querySelectorAll('.error-message').forEach(error => error.textContent = '');
+    document.querySelectorAll('.error').forEach(input => input.classList.remove('error'));
 }
 
-function resetFormState() {
-  filmForm.reset();
-  clearErrors();
-  editingFilmId = null;
-  submitBtn.value = "Добавить фильм";
-  cancelEditBtn.style.display = 'none';
+function resetForm() {
+    filmFormElement.reset();
+    clearFormErrors();
+    editingFilmId = null;
+    submitButton.value = 'Добавить фильм';
+    cancelEditButton.style.display = 'none';
 }
 
-function startEdit(film) {
-  titleInput.value = film.title;
-  genreInput.value = film.genre;
-  yearInput.value = film.releaseYear;
-  watchedInput.checked = film.isWatched;
-  editingFilmId = film.id;
-  submitBtn.value = "Обновить фильм";
-  cancelEditBtn.style.display = 'block';
-  
-  filmForm.scrollIntoView({ behavior: 'smooth' });
+function startEditFilm(film) {
+    titleInput.value = film.title;
+    genreInput.value = film.genre;
+    yearInput.value = film.releaseYear;
+    watchedCheckbox.checked = film.isWatched;
+    editingFilmId = film.id;
+    submitButton.value = 'Обновить фильм';
+    cancelEditButton.style.display = 'block';
+    
+    filmFormElement.scrollIntoView({ behavior: 'smooth' });
 }
 
-async function handleFormSubmit(e) {
-  e.preventDefault();
-  if (!validateForm()) return;
+async function handleFormSubmit(event) {
+    event.preventDefault();
+    if (!validateFilmForm()) return;
 
-  const film = {
-    title: titleInput.value.trim(),
-    genre: genreInput.value.trim(),
-    releaseYear: yearInput.value.trim(),
-    isWatched: watchedInput.checked,
-  };
+    const film = {
+        title: titleInput.value.trim(),
+        genre: genreInput.value.trim(),
+        releaseYear: yearInput.value.trim(),
+        isWatched: watchedCheckbox.checked,
+    };
 
-  if (editingFilmId) {
-    await updateFilm(editingFilmId, film);
-  } else {
-    await addFilm(film);
-  }
-  
-  resetFormState();
+    if (editingFilmId) {
+        await updateFilm(editingFilmId, film);
+    } else {
+        await addFilm(film);
+    }
+    
+    resetForm();
 }
 
 // Работа с API
-async function addFilm(film) {
-  try {
-    const response = await fetch("https://sb-film.skillbox.cc/films", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        email: userEmail,
-      },
-      body: JSON.stringify(film),
-    });
 
-    if (!response.ok) throw new Error("Не удалось добавить фильм");
-    showToast("Фильм успешно добавлен", "success");
-    await loadFilms();
-    filterFilms();
-  } catch (error) {
-    console.error(error);
-    showToast("Произошла ошибка при добавлении фильма", "error");
-  }
+async function addFilm(film) {
+    try {
+        const response = await fetch('https://sb-film.skillbox.cc/films', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                email: userEmail,
+            },
+            body: JSON.stringify(film),
+        });
+
+        if (!response.ok) throw new Error('Не удалось добавить фильм');
+        showNotification('Фильм успешно добавлен', 'success');
+        await loadFilms();
+        applyFilters();
+    } catch (error) {
+        console.error(error);
+        showNotification('Произошла ошибка при добавлении фильма', 'error');
+    }
 }
 
 async function updateFilm(id, film) {
-  try {
-    const response = await fetch(`https://sb-film.skillbox.cc/films/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        email: userEmail,
-      },
-      body: JSON.stringify(film),
-    });
+    try {
+        const response = await fetch(`https://sb-film.skillbox.cc/films/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                email: userEmail,
+            },
+            body: JSON.stringify(film),
+        });
 
-    if (!response.ok) throw new Error("Не удалось обновить фильм");
-    showToast("Фильм успешно обновлен", "success");
-    await loadFilms();
-    filterFilms();
-  } catch (error) {
-    console.error(error);
-    showToast("Произошла ошибка при обновлении фильма", "error");
-  }
+        if (!response.ok) throw new Error('Не удалось обновить фильм');
+        showNotification('Фильм успешно обновлен', 'success');
+        await loadFilms();
+        applyFilters();
+    } catch (error) {
+        console.error(error);
+        showNotification('Произошла ошибка при обновлении фильма', 'error');
+    }
 }
 
 async function loadFilms() {
-  try {
-    const filmsResponse = await fetch("https://sb-film.skillbox.cc/films", {
-      headers: { email: userEmail },
-    });
-    
-    if (!filmsResponse.ok) throw new Error("Не удалось загрузить фильмы");
-    filmsList = await filmsResponse.json();
-  } catch (error) {
-    console.error(error);
-    showToast("Ошибка при загрузке списка фильмов", "error");
-    filmsList = [];
-  }
+    try {
+        const response = await fetch('https://sb-film.skillbox.cc/films', {
+            headers: { email: userEmail },
+        });
+        
+        if (!response.ok) throw new Error('Не удалось загрузить фильмы');
+        films = await response.json();
+    } catch (error) {
+        console.error(error);
+        showNotification('Ошибка при загрузке списка фильмов', 'error');
+        films = [];
+    }
 }
+
+// Отрисовка таблицы
 
 async function renderTable(filmsToRender) {
-  const filmTableBody = document.getElementById("film-tbody");
-  filmTableBody.innerHTML = "";
-  
-  filmsToRender.forEach((film) => {
-    const row = document.createElement("tr");
+    const filmsTableBody = document.getElementById('films-body');
+    filmsTableBody.innerHTML = '';
+    
+    filmsToRender.forEach((film) => {
+        const row = document.createElement('tr');
+        const titleCell = document.createElement('td');
+        titleCell.textContent = film.title;
+        row.appendChild(titleCell);
 
-    const titleTd = document.createElement("td");
-    titleTd.textContent = film.title;
-    row.appendChild(titleTd);
+        const genreCell = document.createElement('td');
+        genreCell.textContent = film.genre;
+        row.appendChild(genreCell);
 
-    const genreTd = document.createElement("td");
-    genreTd.textContent = film.genre;
-    row.appendChild(genreTd);
+        const yearCell = document.createElement('td');
+        yearCell.textContent = film.releaseYear;
+        row.appendChild(yearCell);
 
-    const yearTd = document.createElement("td");
-    yearTd.textContent = film.releaseYear;
-    row.appendChild(yearTd);
+        const watchedCell = document.createElement('td');
+        watchedCell.textContent = film.isWatched ? 'Просмотрен' : 'Не просмотрен';
+        row.appendChild(watchedCell);
 
-    const watchedTd = document.createElement("td");
-    watchedTd.textContent = film.isWatched ? "Просмотрен" : "Не просмотрен";
-    row.appendChild(watchedTd);
+        const actionsCell = document.createElement('td');
 
-    const actionTd = document.createElement("td");
+        const editButton = document.createElement('button');
+        editButton.className = 'edit-button';
+        editButton.type = 'button';
+        editButton.textContent = 'Редактировать';
+        editButton.addEventListener('click', () => startEditFilm(film));
+        actionsCell.appendChild(editButton);
 
-    const editBtn = document.createElement("button");
-    editBtn.className = "editBtn";
-    editBtn.type = "button";
-    editBtn.textContent = "Редактировать";
-    editBtn.addEventListener('click', () => startEdit(film));
-    actionTd.appendChild(editBtn);
+        const deleteButton = document.createElement('button');
+        deleteButton.className = 'delete-button';
+        deleteButton.type = 'button';
+        deleteButton.textContent = 'Удалить';
+        deleteButton.addEventListener('click', () => deleteFilm(film.id));
+        actionsCell.appendChild(deleteButton);
 
-    const deleteBtn = document.createElement("button");
-    deleteBtn.className = "deleteBtn delete";
-    deleteBtn.type = "button";
-    deleteBtn.textContent = "Удалить";
-    deleteBtn.addEventListener('click', () => deleteFilm(film.id));
-    actionTd.appendChild(deleteBtn);
-
-    row.appendChild(actionTd);
-    filmTableBody.appendChild(row);
-  });
+        row.appendChild(actionsCell);
+        filmsTableBody.appendChild(row);
+    });
 }
 
-function filterFilms() {
-  const titleFilter = filTitle.value.toLowerCase().trim();
-  const genreFilter = filGenre.value.toLowerCase().trim();
-  const yearFilter = filYear.value.trim();
-  const watchedFilter = filWatched.value;
+// Фильтрация
 
-  const filteredFilms = filmsList.filter(film => {
-    const matchesTitle = titleFilter === '' || film.title.toLowerCase().includes(titleFilter);
-    const matchesGenre = genreFilter === '' || film.genre.toLowerCase().includes(genreFilter);
-    const matchesYear = yearFilter === '' || film.releaseYear.toString().includes(yearFilter);
-    
-    let matchesWatched = true;
-    if (watchedFilter === 'watched') matchesWatched = film.isWatched === true;
-    else if (watchedFilter === 'notwatched') matchesWatched = film.isWatched === false;
-    
-    return matchesTitle && matchesGenre && matchesYear && matchesWatched;
-  });
+function applyFilters() {
+    const titleFilter = filterTitleInput.value.toLowerCase().trim();
+    const genreFilter = filterGenreInput.value.toLowerCase().trim();
+    const yearFilter = filterYearInput.value.trim();
+    const watchedFilter = filterWatchedSelect.value;
 
-  renderTable(filteredFilms);
+    const filteredFilms = films.filter(film => {
+        const matchesTitle = titleFilter === '' || film.title.toLowerCase().includes(titleFilter);
+        const matchesGenre = genreFilter === '' || film.genre.toLowerCase().includes(genreFilter);
+        const matchesYear = yearFilter === '' || film.releaseYear.toString().includes(yearFilter);
+        
+        let matchesWatched = true;
+        if (watchedFilter === 'watched') matchesWatched = film.isWatched === true;
+        else if (watchedFilter === 'notwatched') matchesWatched = film.isWatched === false;
+        
+        return matchesTitle && matchesGenre && matchesYear && matchesWatched;
+    });
+
+    renderTable(filteredFilms);
 }
+
 
 async function deleteAllFilms() {
-  const isConfirmed = await showConfirm("Вы уверены, что хотите удалить ВСЕ фильмы? Это действие необратимо.");
-  if (!isConfirmed) return;
-  
-  try {
-    const response = await fetch("https://sb-film.skillbox.cc/films", {
-      method: "DELETE",
-      headers: { email: userEmail },
-    });
+    const isConfirmed = await showConfirmDialog('Вы уверены, что хотите удалить ВСЕ фильмы? Это действие необратимо.');
+    if (!isConfirmed) return;
     
-    if (!response.ok) throw new Error("Не удалось удалить все фильмы");
-    showToast("Все фильмы успешно удалены", "success");
-    filmsList = [];
-    filterFilms();
-  } catch (error) {
-    console.error(error);
-    showToast("Произошла ошибка при удалении всех фильмов", "error");
-  }
+    try {
+        const response = await fetch('https://sb-film.skillbox.cc/films', {
+            method: 'DELETE',
+            headers: { email: userEmail },
+        });
+        
+        if (!response.ok) throw new Error('Не удалось удалить все фильмы');
+        showNotification('Все фильмы успешно удалены', 'success');
+        films = [];
+        applyFilters();
+    } catch (error) {
+        console.error(error);
+        showNotification('Произошла ошибка при удалении всех фильмов', 'error');
+    }
 }
 
 async function deleteFilm(id) {
-  const isConfirmed = await showConfirm("Вы уверены, что хотите удалить этот фильм?");
-  if (!isConfirmed) return;
+    const isConfirmed = await showConfirmDialog('Вы уверены, что хотите удалить этот фильм?');
+    if (!isConfirmed) return;
 
-  try {
-    const response = await fetch(`https://sb-film.skillbox.cc/films/${id}`, {
-      method: "DELETE",
-      headers: { email: userEmail },
-    });
+    try {
+        const response = await fetch(`https://sb-film.skillbox.cc/films/${id}`, {
+            method: 'DELETE',
+            headers: { email: userEmail },
+        });
+        
+        if (!response.ok) throw new Error('Не удалось удалить фильм');
+        showNotification('Фильм успешно удален', 'success');
+        await loadFilms();
+        applyFilters();
+    } catch (error) {
+        console.error(error);
+        showNotification('Произошла ошибка при удалении фильма', 'error');
+    }
+}
+
+
+function showNotification(message, type = 'error') {
+    const container = document.getElementById('notifications-container');
+    const notification = document.createElement('div');
+    notification.className = `notification ${type}`;
+    notification.textContent = message;
+    container.appendChild(notification);
     
-    if (!response.ok) throw new Error("Не удалось удалить фильм");
-    showToast("Фильм успешно удален", "success");
-    await loadFilms();
-    filterFilms();
-  } catch (error) {
-    console.error(error);
-    showToast("Произошла ошибка при удалении фильма", "error");
-  }
+    setTimeout(() => {
+        notification.remove();
+    }, 4000);
 }
 
-//Вспомогательные функции для всплывающих окон
-function showToast(message, type = 'error') {
-  const container = document.getElementById('toast-container');
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.textContent = message;
-  container.appendChild(toast);
-  
-  setTimeout(() => {
-    toast.remove();
-  }, 4000);
-}
+function showConfirmDialog(message) {
+    return new Promise((resolve) => {
+        const modal = document.getElementById('confirm-modal');
+        const messageElement = document.getElementById('confirm-message');
+        const yesButton = document.getElementById('confirm-yes');
+        const noButton = document.getElementById('confirm-no');
 
-function showConfirm(message) {
-  return new Promise((resolve) => {
-    const modal = document.getElementById('confirm-modal');
-    const msgEl = document.getElementById('confirm-message');
-    const yesBtn = document.getElementById('confirm-yes');
-    const noBtn = document.getElementById('confirm-no');
+        messageElement.textContent = message;
+        modal.style.display = 'flex';
 
-    msgEl.textContent = message;
-    modal.style.display = 'flex';
+        const cleanup = () => {
+            modal.style.display = 'none';
+            yesButton.onclick = null;
+            noButton.onclick = null;
+        };
 
-    const cleanup = () => {
-      modal.style.display = 'none';
-      yesBtn.onclick = null;
-      noBtn.onclick = null;
-    };
-
-    yesBtn.onclick = () => { cleanup(); resolve(true); };
-    noBtn.onclick = () => { cleanup(); resolve(false); };
-  });
+        yesButton.onclick = () => { cleanup(); resolve(true); };
+        noButton.onclick = () => { cleanup(); resolve(false); };
+    });
 }
 
 // Инициализация событий
-filmForm.addEventListener("submit", handleFormSubmit);
-cancelEditBtn.addEventListener('click', resetFormState);
-deleteAllBtn.addEventListener('click', deleteAllFilms);
 
-filTitle.addEventListener('input', filterFilms);
-filGenre.addEventListener('input', filterFilms);
-filYear.addEventListener('input', filterFilms);
-filWatched.addEventListener('change', filterFilms);
+filmFormElement.addEventListener('submit', handleFormSubmit);
+cancelEditButton.addEventListener('click', resetForm);
+deleteAllButton.addEventListener('click', deleteAllFilms);
 
-// Первичная загрузка
-loadFilms().then(() => filterFilms());
+filterTitleInput.addEventListener('input', applyFilters);
+filterGenreInput.addEventListener('input', applyFilters);
+filterYearInput.addEventListener('input', applyFilters);
+filterWatchedSelect.addEventListener('change', applyFilters);
+
+// Первичная загрузка данных
+loadFilms().then(() => applyFilters());

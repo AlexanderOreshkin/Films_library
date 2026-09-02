@@ -9,59 +9,61 @@
 </head>
 
 <body>
-    <h1 class="heading">🎬 Моя библиотека фильмов</h1>
+    <h1 class="page-title">🎬 Моя библиотека фильмов</h1>
 
-    <form id="film-form" class="film-form-grid">
-        <h2 class="film-form__heading">Добавить фильм</h2>
+    <form id="film-form" class="film-form">
+        <h2 class="form-heading">Добавить фильм</h2>
+
         <div class="form-group full-width">
-            <label for="title">Название:</label>
-            <input type="text" id="title" name="title" autocomplete="off">
+            <label for="film-title">Название:</label>
+            <input type="text" id="film-title" name="film-title" autocomplete="off">
             <div id="title-error" class="error-message"></div>
         </div>
 
         <div class="form-group half-width">
-            <label for="genre">Жанр:</label>
-            <input type="text" id="genre" name="genre" autocomplete="off">
+            <label for="film-genre">Жанр:</label>
+            <input type="text" id="film-genre" name="film-genre" autocomplete="off">
             <div id="genre-error" class="error-message"></div>
         </div>
 
         <div class="form-group half-width">
-            <label for="releaseYear">Год:</label>
-            <input type="text" id="releaseYear" name="releaseYear" inputmode="numeric" autocomplete="off">
-            <div id="releaseYear-error" class="error-message"></div>
+            <label for="film-year">Год:</label>
+            <input type="text" id="film-year" name="film-year" inputmode="numeric" autocomplete="off">
+            <div id="year-error" class="error-message"></div>
         </div>
 
         <div class="form-group full-width">
-            <label for="isWatched" class="checkbox-label">Я уже посмотрел этот фильм
-                <input type="checkbox" id="isWatched" name="isWatched">
+            <label for="film-watched" class="watched-checkbox-label">
+                Я уже посмотрел этот фильм
+                <input type="checkbox" id="film-watched" name="film-watched">
             </label>
         </div>
 
         <div class="form-group button-group">
-            <input type="submit" value="Добавить фильм" class="submit" id="submit-btn">
-            <button type="button" id="cancel-edit-btn" class="cancel-btn" style="display: none;">Отмена
-                редактирования</button>
+            <input type="submit" value="Добавить фильм" class="submit-button" id="submit-btn">
+            <button type="button" id="cancel-edit-btn" class="cancel-edit-button" style="display: none;">
+                Отмена редактирования
+            </button>
         </div>
     </form>
-    <div class="filter">
-        <h2 class="filter__heading">Поиск и фильтры</h2>
-    <div class="filter-wrapper">
-        <form id="filter-form" autocomplete="off">
-            
-            <input type="text" id="filTitle" placeholder="Название фильма">
-            <input type="text" id="filGenre" placeholder="Жанр">
-            <input type="text" id="filYear" placeholder="Год релиза" inputmode="numeric">
-            <select id="filWatched" name="isWatched">
-                <option value="all">Все</option>
-                <option value="watched">Посмотрел</option>
-                <option value="notwatched">Не посмотрел</option>
-            </select>
-        </form>
-        <button class="delete-btn delete" type="button">Удалить все</button>
-    </div>
+
+    <div class="filter-section">
+        <h2 class="filter-heading">Поиск и фильтры</h2>
+        <div class="filter-controls">
+            <form id="filter-form" autocomplete="off">
+                <input type="text" id="filter-title" placeholder="Название фильма">
+                <input type="text" id="filter-genre" placeholder="Жанр">
+                <input type="text" id="filter-year" placeholder="Год релиза" inputmode="numeric">
+                <select id="filter-watched" name="filter-watched">
+                    <option value="all">Все</option>
+                    <option value="watched">Посмотрел</option>
+                    <option value="notwatched">Не посмотрел</option>
+                </select>
+            </form>
+            <button class="delete-all-button" type="button">Удалить все</button>
+        </div>
     </div>
 
-    <!-- Таблица -->
     <div class="table-container">
         <table id="film-table">
             <thead>
@@ -73,21 +75,20 @@
                     <th>Действие</th>
                 </tr>
             </thead>
-            <tbody id="film-tbody">
+            <tbody id="films-body">
             </tbody>
         </table>
     </div>
 
-    <!-- Контейнер для всплывающих уведомлений -->
-    <div id="toast-container" class="toast-container"></div>
 
-    <!-- Модальное окно для подтверждения действий -->
+    <div id="notifications-container" class="notifications-container"></div>
+
     <div id="confirm-modal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <p id="confirm-message">Вы уверены?</p>
             <div class="modal-buttons">
-                <button id="confirm-yes" class="delete">Да</button>
-                <button id="confirm-no" class="cancel-btn">Нет</button>
+                <button id="confirm-yes" class="confirm-yes-button">Да</button>
+                <button id="confirm-no" class="confirm-no-button">Нет</button>
             </div>
         </div>
     </div>
