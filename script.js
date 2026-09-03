@@ -11,12 +11,128 @@ const filterGenreInput = document.getElementById('filter-genre');
 const filterYearInput = document.getElementById('filter-year');
 const filterWatchedSelect = document.getElementById('filter-watched');
 
-const userEmail = 'defaultuser@mail.ru';
+const authModal = document.getElementById('auth-modal');
+const authForm = document.getElementById('auth-form');
+const authNameInput = document.getElementById('auth-name');
+const authEmailInput = document.getElementById('auth-email');
+const authNameError = document.getElementById('auth-name-error');
+const authEmailError = document.getElementById('auth-email-error');
+const skipAuthBtn = document.getElementById('skip-auth-btn');
+
+const userProfile = document.getElementById('user-profile');
+const userGreeting = document.getElementById('user-greeting');
+const logoutBtn = document.getElementById('logout-btn');
+
+let userEmail = 'defaultuser@mail.ru';
+let userName = '';
 let films = [];
 let editingFilmId = null;
+let isAuthenticated = false;
 
-// Валидация формы
+// Проверка авторизации при загрузке
+function checkAuth() {
+    const savedUser = localStorage.getItem('userData');
+    if (savedUser) {
+        const userData = JSON.parse(savedUser);
+        userName = userData.name;
+        userEmail = userData.email;
+        isAuthenticated = true;
+        updateUserProfile();
+        showNotification(`Привет, ${userName}!`, 'success');
+        return true;
+    }
+    return false;
+}
 
+// Обновление профиля пользователя
+function updateUserProfile() {
+    if (isAuthenticated && userName) {
+        userProfile.style.display = 'flex';
+        userGreeting.textContent = `👋 Привет, ${userName}`;
+    } else {
+        userProfile.style.display = 'none';
+    }
+}
+
+// Выход из профиля
+function logout() {
+    localStorage.removeItem('userData');
+    isAuthenticated = false;
+    userName = '';
+    userEmail = 'defaultuser@mail.ru';
+    userProfile.style.display = 'none';
+    films = [];
+    renderTable([]);
+    showNotification('Вы вышли из профиля', 'warning');
+    authModal.style.display = 'flex';
+}
+
+// Валидация формы авторизации
+function validateAuthForm() {
+    let isValid = true;
+    
+    if (!authNameInput.value.trim()) {
+        authNameError.textContent = 'Пожалуйста, введите ваше имя';
+        authNameInput.classList.add('error');
+        isValid = false;
+    } else {
+        authNameError.textContent = '';
+        authNameInput.classList.remove('error');
+    }
+    
+    const emailValue = authEmailInput.value.trim();
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailValue) {
+        authEmailError.textContent = 'Пожалуйста, введите ваш email';
+        authEmailInput.classList.add('error');
+        isValid = false;
+    } else if (!emailRegex.test(emailValue)) {
+        authEmailError.textContent = 'Пожалуйста, введите корректный email';
+        authEmailInput.classList.add('error');
+        isValid = false;
+    } else {
+        authEmailError.textContent = '';
+        authEmailInput.classList.remove('error');
+    }
+    
+    return isValid;
+}
+
+// Авторизации
+async function handleAuthSubmit(event) {
+    event.preventDefault();
+    if (!validateAuthForm()) return;
+    
+    userName = authNameInput.value.trim();
+    userEmail = authEmailInput.value.trim();
+    isAuthenticated = true;
+    
+    localStorage.setItem('userData', JSON.stringify({
+        name: userName,
+        email: userEmail
+    }));
+    
+    authModal.style.display = 'none';
+    updateUserProfile();
+    showNotification(`Привет, ${userName}!`, 'success');
+    
+    await loadFilms();
+    applyFilters();
+}
+
+// Пропуск авторизации
+function skipAuth() {
+    isAuthenticated = false;
+    userEmail = 'defaultuser@mail.ru';
+    userName = 'Гость';
+    authModal.style.display = 'none';
+    showNotification('Вы вошли как гость', 'warning');
+    
+    loadFilms();
+    applyFilters();
+}
+
+// Валидация формы фильма
 function validateFilmForm() {
     let isValid = true;
 
@@ -80,7 +196,7 @@ function startEditFilm(film) {
     editingFilmId = film.id;
     submitButton.value = 'Обновить фильм';
     cancelEditButton.style.display = 'block';
-    
+   
     filmFormElement.scrollIntoView({ behavior: 'smooth' });
 }
 
@@ -100,8 +216,34 @@ async function handleFormSubmit(event) {
     } else {
         await addFilm(film);
     }
-    
+   
     resetForm();
+}
+
+// Работа с localStorage
+function saveFilmsToLocalStorage(filmsData) {
+    try {
+        localStorage.setItem('films', JSON.stringify(filmsData));
+    } catch (error) {
+        console.error('Ошибка сохранения фильмов в localStorage:', error);
+    }
+}
+
+function loadFilmsFromLocalStorage() {
+    try {
+        const savedFilms = localStorage.getItem('films');
+        if (savedFilms) {
+            return JSON.parse(savedFilms);
+        }
+        return null;
+    } catch (error) {
+        console.error('Ошибка загрузки фильмов из localStorage:', error);
+        return null;
+    }
+}
+
+function clearFilmsFromLocalStorage() {
+    localStorage.removeItem('films');
 }
 
 // Работа с API
@@ -153,13 +295,22 @@ async function loadFilms() {
         const response = await fetch('https://sb-film.skillbox.cc/films', {
             headers: { email: userEmail },
         });
-        
+       
         if (!response.ok) throw new Error('Не удалось загрузить фильмы');
         films = await response.json();
+        // Сохраняем полученные фильмы в localStorage
+        saveFilmsToLocalStorage(films);
     } catch (error) {
         console.error(error);
-        showNotification('Ошибка при загрузке списка фильмов', 'error');
-        films = [];
+        // При ошибке загружаем из localStorage
+        const localFilms = loadFilmsFromLocalStorage();
+        if (localFilms && localFilms.length > 0) {
+            films = localFilms;
+            showNotification('Загружены фильмы из локального хранилища', 'warning');
+        } else {
+            films = [];
+            showNotification('Ошибка при загрузке списка фильмов', 'error');
+        }
     }
 }
 
@@ -168,7 +319,7 @@ async function loadFilms() {
 async function renderTable(filmsToRender) {
     const filmsTableBody = document.getElementById('films-body');
     filmsTableBody.innerHTML = '';
-    
+   
     filmsToRender.forEach((film) => {
         const row = document.createElement('tr');
         const titleCell = document.createElement('td');
@@ -188,7 +339,7 @@ async function renderTable(filmsToRender) {
         row.appendChild(watchedCell);
 
         const actionsCell = document.createElement('td');
-
+        actionsCell.classList.add('table-actions');
         const editButton = document.createElement('button');
         editButton.className = 'edit-button';
         editButton.type = 'button';
@@ -220,31 +371,31 @@ function applyFilters() {
         const matchesTitle = titleFilter === '' || film.title.toLowerCase().includes(titleFilter);
         const matchesGenre = genreFilter === '' || film.genre.toLowerCase().includes(genreFilter);
         const matchesYear = yearFilter === '' || film.releaseYear.toString().includes(yearFilter);
-        
+       
         let matchesWatched = true;
         if (watchedFilter === 'watched') matchesWatched = film.isWatched === true;
         else if (watchedFilter === 'notwatched') matchesWatched = film.isWatched === false;
-        
+       
         return matchesTitle && matchesGenre && matchesYear && matchesWatched;
     });
 
     renderTable(filteredFilms);
 }
 
-
 async function deleteAllFilms() {
     const isConfirmed = await showConfirmDialog('Вы уверены, что хотите удалить ВСЕ фильмы? Это действие необратимо.');
     if (!isConfirmed) return;
-    
+   
     try {
         const response = await fetch('https://sb-film.skillbox.cc/films', {
             method: 'DELETE',
             headers: { email: userEmail },
         });
-        
+       
         if (!response.ok) throw new Error('Не удалось удалить все фильмы');
         showNotification('Все фильмы успешно удалены', 'success');
         films = [];
+        clearFilmsFromLocalStorage();
         applyFilters();
     } catch (error) {
         console.error(error);
@@ -261,7 +412,7 @@ async function deleteFilm(id) {
             method: 'DELETE',
             headers: { email: userEmail },
         });
-        
+       
         if (!response.ok) throw new Error('Не удалось удалить фильм');
         showNotification('Фильм успешно удален', 'success');
         await loadFilms();
@@ -272,14 +423,13 @@ async function deleteFilm(id) {
     }
 }
 
-
 function showNotification(message, type = 'error') {
     const container = document.getElementById('notifications-container');
     const notification = document.createElement('div');
     notification.className = `notification ${type}`;
     notification.textContent = message;
     container.appendChild(notification);
-    
+   
     setTimeout(() => {
         notification.remove();
     }, 4000);
@@ -317,5 +467,19 @@ filterGenreInput.addEventListener('input', applyFilters);
 filterYearInput.addEventListener('input', applyFilters);
 filterWatchedSelect.addEventListener('change', applyFilters);
 
-// Первичная загрузка данных
-loadFilms().then(() => applyFilters());
+authForm.addEventListener('submit', handleAuthSubmit);
+skipAuthBtn.addEventListener('click', skipAuth);
+
+logoutBtn.addEventListener('click', logout);
+
+// Инициализация приложения
+function initApp() {
+
+    if (!checkAuth()) {
+        authModal.style.display = 'flex';
+    } else {
+        loadFilms().then(() => applyFilters());
+    }
+}
+
+initApp();

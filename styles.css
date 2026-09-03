@@ -5,8 +5,48 @@ body {
     color: #333;
 }
 
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
 .page-title {
-    margin-top: 0;
+    margin: 0;
+}
+
+.user-profile {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    background-color: #afa5a5;
+    padding: 10px 20px;
+    border-radius: 5px;
+    box-shadow: 0px 0px 5px #999;
+}
+
+.user-greeting {
+    font-weight: bold;
+    font-size: 16px;
+    color: #333;
+}
+
+.logout-button {
+    background-color: #6c757d;
+    color: #fff;
+    padding: 6px 15px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.logout-button:hover {
+    background-color: #5a6268;
 }
 
 .film-form {
@@ -130,6 +170,7 @@ body {
     border-radius: 5px;
     border: 1px solid #ddd;
     flex: 1;
+    box-sizing: border-box;
 }
 
 .delete-all-button {
@@ -339,6 +380,67 @@ input.error {
     background-color: #5a6268;
 }
 
+/* Стили для модального окна авторизации */
+#auth-modal .modal-content {
+    max-width: 450px;
+}
+
+#auth-modal .form-group {
+    margin-bottom: 15px;
+    text-align: left;
+}
+
+#auth-modal .form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+#auth-modal .form-group input {
+    width: 100%;
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid #ddd;
+    box-sizing: border-box;
+}
+
+#auth-modal .modal-buttons {
+    margin-top: 20px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+#auth-modal .modal-buttons button {
+    min-width: 140px;
+}
+
+#auth-modal .error-message {
+    color: #d32f2f;
+    font-size: 12px;
+    margin-top: 4px;
+    min-height: 16px;
+}
+
+#auth-modal input.error {
+    background-color: rgb(242, 176, 176);
+    border-color: #d32f2f;
+}
+
+@media (max-width: 830px ) {
+    .header-container {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .user-profile {
+        justify-content: center;
+    }
+
+    .filter-controls {
+        flex-direction: column;
+    }
+}
+
 @media (max-width: 768px) {
     body {
         padding: 15px;
@@ -350,10 +452,6 @@ input.error {
     
     .half-width {
         grid-column: 1 / -1;
-    }
-
-    .filter-controls {
-        flex-direction: column;
     }
     
     #filter-form {
@@ -377,5 +475,13 @@ input.error {
     
     table {
         min-width: 600px;
+    }
+
+    .table-actions {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 5px;
+        gap: 10px;
     }
 }
